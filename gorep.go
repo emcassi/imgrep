@@ -15,6 +15,10 @@ type Flags struct {
 	IgnorePunctuation bool
 }
 
+var (
+	flags Flags 
+)
+
 func main() {
 
 	flags, files, dirs, err := collectArgs()
@@ -26,19 +30,22 @@ func main() {
 	fmt.Println(flags)
 	fmt.Println(len(files))
 	fmt.Println(len(dirs))
+	
+	if len(files) == 0 {
+		fmt.Println("Error: No files provided") 
+		return 
+	}
 
 	client := gosseract.NewClient()
 	defer client.Close()
 
-	client.SetImage("imgs/test2.png")
-
-	text, err := client.Text()
+	res, err := grepImage(client, files[0])
 	if err != nil {
-		fmt.Println(err.Error())
-	} else {
-		cleanData(&text, flags)
-		fmt.Println(text)
+		fmt.Println(err)
+		return
 	}
+
+	fmt.Println(res)
 }
 
 func newFlags() Flags {
@@ -79,6 +86,20 @@ func collectArgs() (Flags, []string, []string, error) {
 	}
 
 	return flags, files, dirs, nil
+}
+
+func grepImage(client *gosseract.Client, filename string) (string, error) {
+	var result string
+	client.SetImage(filename)
+
+	text, err := client.Text()
+	if err != nil {
+		fmt.Println(err.Error())
+	} else {
+		cleanData(&text, flags)
+		result = text
+	}
+	return result, nil
 }
 
 func cleanData(text *string, flags Flags) {
