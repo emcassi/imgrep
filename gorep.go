@@ -86,7 +86,7 @@ func cleanData(text *string, flags Flags) {
 	var altered []rune
 	var addChar bool
 
-	punct := ",.!?:;'=[](){}\\|/~"
+	punct := ",.!?:;'=[](){}\\|/~“”’`"
 
 	if flags.IgnoreCase {
 		*text = strings.ToLower(*text)
