@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/otiai10/gosseract/v2"
@@ -13,33 +15,26 @@ import (
 type Flags struct {
 	IgnoreCase        bool
 	IgnorePunctuation bool
+	Padding           int
 }
-
-var (
-	flags Flags 
-)
 
 func main() {
 
-	flags, files, dirs, err := collectArgs()
+	flags, pattern, files, _, err := collectArgs()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
-	fmt.Println(flags)
-	fmt.Println(len(files))
-	fmt.Println(len(dirs))
-	
 	if len(files) == 0 {
-		fmt.Println("Error: No files provided") 
-		return 
+		fmt.Println("Error: No files provided")
+		return
 	}
 
 	client := gosseract.NewClient()
 	defer client.Close()
 
-	res, err := grepImage(client, files[0])
+	res, err := grepImage(client, flags, pattern, files[0])
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -52,53 +47,108 @@ func newFlags() Flags {
 	return Flags{
 		IgnoreCase:        false,
 		IgnorePunctuation: false,
+		Padding:           25,
 	}
 }
 
-func collectArgs() (Flags, []string, []string, error) {
+func collectArgs() (Flags, string, []string, []string, error) {
 	flags := newFlags()
+	var pattern string
 	var files []string
 	var dirs []string
 
-	for _, arg := range os.Args[1:] {
+	args := os.Args[1:]
+	for i, arg := range args {
 
 		if arg[0] == '-' {
 			if len(files) > 0 {
-				return flags, files, dirs, errors.New("all arguments must come before your files")
+				return flags, pattern, files, dirs, errors.New("all arguments must come before your files and pattern")
 			}
 			switch arg[1:] {
 			case "ic":
 				flags.IgnoreCase = true
 			case "ip":
 				flags.IgnorePunctuation = true
+			case "p":
+				break
 			default:
-				return flags, files, dirs, errors.New("invalid argument: " + arg)
+				return flags, pattern, files, dirs, errors.New("invalid argument: " + arg)
 			}
 		} else {
-			if filepath.Ext(arg) == "" {
-				if containsString(dirs, arg) { continue }
+			if i > 0 && args[i-1] == "-p" {
+				padding, err := strconv.Atoi(arg)
+				if err != nil {
+					return flags, pattern, files, dirs, errors.New("padding value must be an integer. you entered: " + arg)
+				}
+
+				flags.Padding = padding
+				continue
+			}
+			if pattern == "" {
+				pattern = arg
+				continue
+			}
+			switch filepath.Ext(arg) {
+			case "":
+				if containsString(dirs, arg) {
+					continue
+				}
 				dirs = append(dirs, arg)
-			} else {
-				if containsString(files, arg) { continue }
+			case ".png", ".jpeg", ".jpg", ".bmp":
+				if containsString(files, arg) {
+					continue
+				}
 				files = append(files, arg)
+			default:
+				break
 			}
 		}
 	}
 
-	return flags, files, dirs, nil
+	return flags, pattern, files, dirs, nil
 }
 
-func grepImage(client *gosseract.Client, filename string) (string, error) {
+func grepImage(client *gosseract.Client, flags Flags, pattern string, filename string) (string, error) {
 	var result string
 	client.SetImage(filename)
 
 	text, err := client.Text()
 	if err != nil {
-		fmt.Println(err.Error())
+		return "", err
 	} else {
 		cleanData(&text, flags)
-		result = text
+
+		rg, err := regexp.Compile(pattern)
+		if err != nil {
+			return "", err
+		}
+
+		matches := rg.FindAllStringIndex(text, -1)
+
+		for _, match := range matches {
+			startFoundIndex := match[0]
+			endFoundIndex := match[1]
+
+			var startReturnIndex int
+			var endReturnIndex int
+
+			if startFoundIndex-flags.Padding < 0 {
+				startReturnIndex = 0
+			} else {
+				startReturnIndex = startFoundIndex - flags.Padding
+			}
+
+			if endFoundIndex+flags.Padding > len(text)-1 {
+				endReturnIndex = len(text) - 1
+			} else {
+				endReturnIndex = endFoundIndex + flags.Padding
+			}
+
+			fmt.Println("MATCH " + filename + ": \n" + text[startReturnIndex:endReturnIndex])
+
+		}
 	}
+
 	return result, nil
 }
 
@@ -115,9 +165,9 @@ func cleanData(text *string, flags Flags) {
 
 	for _, c := range *text {
 		addChar = true
-		//		if c == '\n' {
-		//c = ' '
-		//}
+		if c == '\n' {
+			c = ' '
+		}
 
 		if flags.IgnorePunctuation {
 			if containsRune(punct, c) {
