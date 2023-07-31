@@ -2,11 +2,10 @@ package main
 
 import (
 	"errors"
+	"flag"
 	"fmt"
-	"os"
 	"path/filepath"
 	"regexp"
-	"strconv"
 	"strings"
 
 	"github.com/otiai10/gosseract/v2"
@@ -55,57 +54,43 @@ func newFlags() Flags {
 
 func collectArgs() (Flags, string, []string, []string, error) {
 	flags := newFlags()
-	var pattern string
+
+	ignoreCase := flag.Bool("ic", false, "Ignore case when matching")
+	ignorePunctuation := flag.Bool("ip", false, "Ignore punctuation when matching")
+	invert := flag.Bool("x", false, "Invert match (display lines that do not match)")
+	padding := flag.Int("p", 25, "Padding (chars) for displaying matched text")
+	flag.Parse()
+
+	args := flag.Args()
+	if len(args) < 2 {
+		return flags, "", nil, nil, errors.New("pattern and at least one file/directory must be provided")
+	}
+
+	flags.IgnoreCase = *ignoreCase
+	flags.IgnorePunctuation = *ignorePunctuation
+	flags.Invert = *invert
+	flags.Padding = *padding
+
+	pattern := args[0]
+	filesAndDirs := args[1:]
+
 	var files []string
 	var dirs []string
 
-	args := os.Args[1:]
-	for i, arg := range args {
-
-		if arg[0] == '-' {
-			if len(files) > 0 {
-				return flags, pattern, files, dirs, errors.New("all arguments must come before your files and pattern")
-			}
-			switch arg[1:] {
-			case "ic":
-				flags.IgnoreCase = true
-			case "ip":
-				flags.IgnorePunctuation = true
-			case "x":
-				flags.Invert = true
-			case "p":
-				break
-			default:
-				return flags, pattern, files, dirs, errors.New("invalid argument: " + arg)
-			}
-		} else {
-			if i > 0 && args[i-1] == "-p" {
-				padding, err := strconv.Atoi(arg)
-				if err != nil {
-					return flags, pattern, files, dirs, errors.New("padding value must be an integer. you entered: " + arg)
-				}
-
-				flags.Padding = padding
+	for _, arg := range filesAndDirs {
+		switch filepath.Ext(arg) {
+		case "":
+			if containsString(dirs, arg) {
 				continue
 			}
-			if pattern == "" {
-				pattern = arg
+			dirs = append(dirs, arg)
+		case ".png", ".jpeg", ".jpg", ".bmp":
+			if containsString(files, arg) {
 				continue
 			}
-			switch filepath.Ext(arg) {
-			case "":
-				if containsString(dirs, arg) {
-					continue
-				}
-				dirs = append(dirs, arg)
-			case ".png", ".jpeg", ".jpg", ".bmp":
-				if containsString(files, arg) {
-					continue
-				}
-				files = append(files, arg)
-			default:
-				break
-			}
+			files = append(files, arg)
+		default:
+			return flags, "", nil, nil, fmt.Errorf("invalid file format for %s", arg)
 		}
 	}
 
