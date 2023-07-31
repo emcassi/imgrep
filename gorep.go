@@ -102,45 +102,53 @@ func grepImage(client *gosseract.Client, flags Flags, pattern string, filename s
 	text, err := client.Text()
 	if err != nil {
 		return "", errors.New("file: " + filename + " isn't a valid image file")
-	} else {
-		cleanData(&text, flags)
+	}
 
-		rg, err := regexp.Compile(pattern)
-		if err != nil {
-			return "", err
-		}
+	cleanData(&text, flags)
 
-		matches := rg.FindAllStringIndex(text, -1)
+	rg, err := regexp.Compile(pattern)
+	if err != nil {
+		return "", err
+	}
 
-		for _, match := range matches {
-			startFoundIndex := match[0]
-			endFoundIndex := match[1]
+	matches := rg.FindAllStringIndex(text, -1)
 
-			if flags.Invert {
-				text = text[:startFoundIndex] + text[endFoundIndex:]
+	if len(matches) == 0 {
+		return "", errors.New("found no matches")
+	}
+
+	lastMatch := []int{0, 0}
+
+	for _, match := range matches {
+		startFoundIndex := match[0]
+		endFoundIndex := match[1]
+
+		if flags.Invert {
+			result += text[lastMatch[1]:startFoundIndex]
+		} else {
+			var startReturnIndex int
+			var endReturnIndex int
+
+			if startFoundIndex-flags.Padding < 0 {
+				startReturnIndex = 0
 			} else {
-				var startReturnIndex int
-				var endReturnIndex int
-
-				if startFoundIndex-flags.Padding < 0 {
-					startReturnIndex = 0
-				} else {
-					startReturnIndex = startFoundIndex - flags.Padding
-				}
-
-				if endFoundIndex+flags.Padding > len(text)-1 {
-					endReturnIndex = len(text) - 1
-				} else {
-					endReturnIndex = endFoundIndex + flags.Padding
-				}
-
-				result += fmt.Sprintf("MATCH %s:\n%s\n\n", filename, text[startReturnIndex:endReturnIndex])
+				startReturnIndex = startFoundIndex - flags.Padding
 			}
+
+			if endFoundIndex+flags.Padding > len(text)-1 {
+				endReturnIndex = len(text) - 1
+			} else {
+				endReturnIndex = endFoundIndex + flags.Padding
+			}
+
+			result += fmt.Sprintf("MATCH %s:\n%s\n\n", filename, text[startReturnIndex:endReturnIndex])
 		}
+
+		lastMatch = match
 	}
 
 	if flags.Invert {
-		result = text
+		result += text[lastMatch[1]:]
 	}
 
 	return result, nil
