@@ -55,7 +55,10 @@ func main() {
 			fmt.Printf("%s: %s\n", file, err)
 			continue
 		}
-		fmt.Print(res)
+
+		for _, r := range res {
+			fmt.Println(r)
+		}
 	}
 }
 
@@ -129,18 +132,18 @@ func extractText(client *gosseract.Client, filename string) (string, error) {
 }
 
 // grepImage performs pattern matching on the given text based on the provided flags.
-func grepImage(text string, flags Flags, pattern string, filename string) (string, error) {
-	var result string
+func grepImage(text string, flags Flags, pattern string, filename string) ([]string, error) {
+	result := []string{}
 
 	rg, err := regexp.Compile(pattern)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	matches := rg.FindAllStringIndex(text, -1)
 
 	if len(matches) == 0 {
-		return "", errors.New("found no matches")
+		return nil, errors.New("found no matches")
 	}
 
 	lastMatch := []int{0, 0}
@@ -150,7 +153,13 @@ func grepImage(text string, flags Flags, pattern string, filename string) (strin
 		endFoundIndex := match[1]
 
 		if flags.Invert {
-			result += text[lastMatch[1]:startFoundIndex]
+			match := text[lastMatch[1]:startFoundIndex]
+
+			if len(result) == 0 {
+				result = append(result, match)
+			} else {
+				result[0] += match
+			}
 		} else {
 			var startReturnIndex int
 			var endReturnIndex int
@@ -167,14 +176,14 @@ func grepImage(text string, flags Flags, pattern string, filename string) (strin
 				endReturnIndex = endFoundIndex + flags.Padding
 			}
 
-			result += fmt.Sprintf("MATCH %s:\n%s\n\n", filename, text[startReturnIndex:endReturnIndex])
+			result = append(result, text[startReturnIndex:endReturnIndex])
 		}
 
 		lastMatch = match
 	}
 
 	if flags.Invert {
-		result = fmt.Sprintf("%s without (%s):\n%s%s\n\n", filename, pattern, result, text[lastMatch[1]:])
+		result[0] += text[lastMatch[1]:]
 	}
 
 	return result, nil
@@ -230,4 +239,3 @@ func containsString(list []string, s string) bool {
 	}
 	return false
 }
-
