@@ -28,7 +28,7 @@ go build
 To search for a pattern in an image, use the following command:
 
 ```bash
-./go run . [flags] pattern file.png [file2.png ...]
+go run . [flags] pattern file.png [file2.png ...]
 ```
 
 ### Flags
@@ -46,8 +46,8 @@ To search for a pattern in an image, use the following command:
 Examples:
 
 ```bash
-./go run . -ic -ip -p 10 hello world image1.png
-./go run . -x error image2.png
+go run . -ic -ip -p 10 hello world image1.png
+go run . -x error image2.png
 ```
 
 ## Contributing
