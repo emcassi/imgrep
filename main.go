@@ -15,8 +15,8 @@ import (
 type Flags struct {
 	IgnoreCase        bool // Ignore case when matching.
 	IgnorePunctuation bool // Ignore punctuation when matching.
-	Padding           int  // Padding (chars) for displaying matched text.
 	Invert            bool // Invert match (display lines that do not match).
+	Padding           int  // Padding (chars) for displaying matched text.
 }
 
 func main() {
