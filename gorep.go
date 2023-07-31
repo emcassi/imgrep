@@ -43,17 +43,8 @@ func main() {
 	fmt.Println(res)
 }
 
-func newFlags() Flags {
-	return Flags{
-		IgnoreCase:        false,
-		IgnorePunctuation: false,
-		Padding:           25,
-		Invert:            false,
-	}
-}
-
 func collectArgs() (Flags, string, []string, []string, error) {
-	flags := newFlags()
+	flags := Flags{}
 
 	ignoreCase := flag.Bool("ic", false, "Ignore case when matching")
 	ignorePunctuation := flag.Bool("ip", false, "Ignore punctuation when matching")
@@ -77,19 +68,26 @@ func collectArgs() (Flags, string, []string, []string, error) {
 	var files []string
 	var dirs []string
 
+	validExts := map[string]bool{
+		".png":  true,
+		".jpeg": true,
+		".jpg":  true,
+		".bmp":  true,
+	}
+
 	for _, arg := range filesAndDirs {
-		switch filepath.Ext(arg) {
-		case "":
+		ext := filepath.Ext(arg)
+		if ext == "" {
 			if containsString(dirs, arg) {
 				continue
 			}
 			dirs = append(dirs, arg)
-		case ".png", ".jpeg", ".jpg", ".bmp":
+		} else if validExts[ext] {
 			if containsString(files, arg) {
 				continue
 			}
 			files = append(files, arg)
-		default:
+		} else {
 			return flags, "", nil, nil, fmt.Errorf("invalid file format for %s", arg)
 		}
 	}
