@@ -11,38 +11,45 @@ import (
 	"github.com/otiai10/gosseract/v2"
 )
 
+// Flags represents command-line flags for GrepImage tool.
 type Flags struct {
-	IgnoreCase        bool
-	IgnorePunctuation bool
-	Padding           int
-	Invert            bool
+	IgnoreCase        bool // Ignore case when matching.
+	IgnorePunctuation bool // Ignore punctuation when matching.
+	Padding           int  // Padding (chars) for displaying matched text.
+	Invert            bool // Invert match (display lines that do not match).
 }
 
 func main() {
-
+	// Collect command-line arguments and flags.
 	flags, pattern, files, _, err := collectArgs()
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
+	// Check if files are provided.
 	if len(files) == 0 {
 		fmt.Println("Error: No files provided")
 		return
 	}
 
+	// Initialize the OCR client.
 	client := gosseract.NewClient()
 	defer client.Close()
 
+	// Process each file and perform text extraction and pattern matching.
 	for _, file := range files {
+		// Extract text from the image file.
 		text, err := extractText(client, file)
 		if err != nil {
 			fmt.Println(err)
 			continue
 		}
 
+		// Pre-process text based on flags.
 		cleanData(&text, flags)
 
+		// Perform pattern matching on the text.
 		res, err := grepImage(text, flags, pattern, file)
 		if err != nil {
 			fmt.Printf("%s: %s\n", file, err)
@@ -50,18 +57,20 @@ func main() {
 		}
 		fmt.Print(res)
 	}
-
 }
 
+// collectArgs collects and parses command-line arguments and flags.
 func collectArgs() (Flags, string, []string, []string, error) {
 	flags := Flags{}
 
+	// Define command-line flags.
 	ignoreCase := flag.Bool("ic", false, "Ignore case when matching")
 	ignorePunctuation := flag.Bool("ip", false, "Ignore punctuation when matching")
 	invert := flag.Bool("x", false, "Invert match (display lines that do not match)")
 	padding := flag.Int("p", 25, "Padding (chars) for displaying matched text")
 	flag.Parse()
 
+	// Parse command-line arguments and flags.
 	args := flag.Args()
 	if len(args) < 2 {
 		return flags, "", nil, nil, errors.New("pattern and at least one file/directory must be provided")
@@ -78,6 +87,7 @@ func collectArgs() (Flags, string, []string, []string, error) {
 	var files []string
 	var dirs []string
 
+	// Define valid image file extensions.
 	validExts := map[string]bool{
 		".png":  true,
 		".jpeg": true,
@@ -85,6 +95,7 @@ func collectArgs() (Flags, string, []string, []string, error) {
 		".bmp":  true,
 	}
 
+	// Separate files and directories based on their file extensions.
 	for _, arg := range filesAndDirs {
 		ext := filepath.Ext(arg)
 		if ext == "" {
@@ -105,6 +116,7 @@ func collectArgs() (Flags, string, []string, []string, error) {
 	return flags, pattern, files, dirs, nil
 }
 
+// extractText extracts text from an image file using OCR.
 func extractText(client *gosseract.Client, filename string) (string, error) {
 	client.SetImage(filename)
 
@@ -116,6 +128,7 @@ func extractText(client *gosseract.Client, filename string) (string, error) {
 	return text, nil
 }
 
+// grepImage performs pattern matching on the given text based on the provided flags.
 func grepImage(text string, flags Flags, pattern string, filename string) (string, error) {
 	var result string
 
@@ -167,8 +180,8 @@ func grepImage(text string, flags Flags, pattern string, filename string) (strin
 	return result, nil
 }
 
+// cleanData pre-processes the text based on the provided flags.
 func cleanData(text *string, flags Flags) {
-
 	var altered []rune
 	var addChar bool
 
@@ -198,6 +211,7 @@ func cleanData(text *string, flags Flags) {
 	*text = string(altered)
 }
 
+// containsRune checks if a rune exists in a given string.
 func containsRune(list string, char rune) bool {
 	for _, c := range list {
 		if c == char {
@@ -207,6 +221,7 @@ func containsRune(list string, char rune) bool {
 	return false
 }
 
+// containsString checks if a string exists in a given string slice.
 func containsString(list []string, s string) bool {
 	for _, str := range list {
 		if s == str {
@@ -215,3 +230,4 @@ func containsString(list []string, s string) bool {
 	}
 	return false
 }
+
