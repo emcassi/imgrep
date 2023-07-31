@@ -114,7 +114,7 @@ func grepImage(client *gosseract.Client, flags Flags, pattern string, filename s
 
 	text, err := client.Text()
 	if err != nil {
-		return "", err
+		return "", errors.New("file: " + filename + " isn't a valid image file") 
 	} else {
 		cleanData(&text, flags)
 
@@ -144,7 +144,7 @@ func grepImage(client *gosseract.Client, flags Flags, pattern string, filename s
 				endReturnIndex = endFoundIndex + flags.Padding
 			}
 
-			fmt.Println("MATCH " + filename + ": \n" + text[startReturnIndex:endReturnIndex])
+			fmt.Println("MATCH " + filename + ": \n" + text[startReturnIndex:endReturnIndex] + "\n")
 
 		}
 	}
