@@ -52,14 +52,14 @@ go run . -x error image2.png
 
 ## Roadmap
 
-- Add ocr functionality [x]
-- Add argument parsing [x]
-- Be able to grep a single image [x]
-- Be able to grep multiple images [x]
-- Be able to pass directories of images [ ]
-- Add non-image grep functionality (text files) [ ]
-- Further Testing [ ]
-- Add documentation [ ]
+- [x] Add ocr functionality 
+- [x] Add argument parsing
+- [x] Be able to grep a single image
+- [x] Be able to grep multiple images
+- [ ] Be able to pass directories of images
+- [ ] Add non-image grep functionality (text files)
+- [ ] Further Testing
+- [ ] Add documentation
 
 ## Contributing
 
