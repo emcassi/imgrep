@@ -41,7 +41,7 @@ go run . [flags] pattern file.png [file2.png ...]
 ### Arguments
 
 - Arg 1 : pattern - accepts regex
-- Arg 2+ : files and directory names
+- Arg 2+ : file names
 
 Examples:
 
@@ -49,6 +49,17 @@ Examples:
 go run . -ic -ip -p 10 hello image1.png
 go run . -x error image2.png
 ```
+
+## Roadmap
+
+- Add ocr functionality [x]
+- Add argument parsing [x]
+- Be able to grep a single image [x]
+- Be able to grep multiple images [x]
+- Be able to pass directories of images [ ]
+- Add non-image grep functionality (text files) [ ]
+- Further Testing [ ]
+- Add documentation [ ]
 
 ## Contributing
 
