@@ -34,45 +34,56 @@ func TestCleanData(t *testing.T) {
 }
 
 func TestGrepImage(t *testing.T) {
+
 	// Test a regular match
 	text := "his name is john. he loves his job and his family."
-	flags := Flags{Padding: 25}
+	flags := Flags{Padding: 0}
 	pattern := `\bhis\b`
 	filename := "test.png"
-	expected := "MATCH test.png:\nhis name is john. he loves h\n\nMATCH test.png:\ns name is john. he loves his job and his family\n\nMATCH test.png:\nhn. he loves his job and his family\n\n"
+	expected := []string{
+		"his",
+		"his",
+		"his",
+	}
+
 	result, err := grepImage(text, flags, pattern, filename)
 	if err != nil {
 		t.Errorf("Error occurred: %v", err)
 	}
-	if result != expected {
+	if !areListsEqual(expected, result) {
 		t.Errorf("Expected %q, but got %q", expected, result)
 	}
 
-	// Test an inverted match
-	text = "his name is john. he loves his job and his family."
+	// Test with invert flag set to true
+	text = "This is a test."
 	flags = Flags{Invert: true}
-	pattern = `\bhis\b`
+	pattern = "test"
 	filename = "test.png"
-	expected = "test.png without (\\bhis\\b):\n name is john. he loves  job and  family.\n\n"
+	expected = []string{
+		"This is a .",
+	}
 	result, err = grepImage(text, flags, pattern, filename)
 	if err != nil {
 		t.Errorf("Error occurred: %v", err)
 	}
-	if result != expected {
+	if !areListsEqual(expected, result) {
 		t.Errorf("Expected %q, but got %q", expected, result)
 	}
 
-	// Test an inverted, case ignored match
-	text = "His name is John. He loves his job and his family."
-	flags = Flags{Invert: true}
-	pattern = `(?i)\bhis\b`
+	// Test padding functionality
+	text = "This is a test. Padding test."
+	flags = Flags{Padding: 6}
+	pattern = "test"
 	filename = "test.png"
-	expected = "test.png without ((?i)\\bhis\\b):\n name is John. He loves  job and  family.\n\n"
+	expected = []string{
+		" is a test. Padd",
+		"dding test",
+	}
 	result, err = grepImage(text, flags, pattern, filename)
 	if err != nil {
 		t.Errorf("Error occurred: %v", err)
 	}
-	if result != expected {
+	if !areListsEqual(expected, result) {
 		t.Errorf("Expected %q, but got %q", expected, result)
 	}
 
@@ -85,4 +96,18 @@ func TestGrepImage(t *testing.T) {
 	if err == nil {
 		t.Errorf("Expected error for no matches, but got none.")
 	}
+}
+
+func areListsEqual(a, b []string) bool {
+	
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }
