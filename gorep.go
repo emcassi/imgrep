@@ -16,6 +16,7 @@ type Flags struct {
 	IgnoreCase        bool
 	IgnorePunctuation bool
 	Padding           int
+	Invert            bool
 }
 
 func main() {
@@ -48,6 +49,7 @@ func newFlags() Flags {
 		IgnoreCase:        false,
 		IgnorePunctuation: false,
 		Padding:           25,
+		Invert:            false,
 	}
 }
 
@@ -69,6 +71,8 @@ func collectArgs() (Flags, string, []string, []string, error) {
 				flags.IgnoreCase = true
 			case "ip":
 				flags.IgnorePunctuation = true
+			case "x":
+				flags.Invert = true
 			case "p":
 				break
 			default:
@@ -114,7 +118,7 @@ func grepImage(client *gosseract.Client, flags Flags, pattern string, filename s
 
 	text, err := client.Text()
 	if err != nil {
-		return "", errors.New("file: " + filename + " isn't a valid image file") 
+		return "", errors.New("file: " + filename + " isn't a valid image file")
 	} else {
 		cleanData(&text, flags)
 
@@ -129,24 +133,31 @@ func grepImage(client *gosseract.Client, flags Flags, pattern string, filename s
 			startFoundIndex := match[0]
 			endFoundIndex := match[1]
 
-			var startReturnIndex int
-			var endReturnIndex int
-
-			if startFoundIndex-flags.Padding < 0 {
-				startReturnIndex = 0
+			if flags.Invert {
+				text = text[:startFoundIndex] + text[endFoundIndex:]
 			} else {
-				startReturnIndex = startFoundIndex - flags.Padding
+				var startReturnIndex int
+				var endReturnIndex int
+
+				if startFoundIndex-flags.Padding < 0 {
+					startReturnIndex = 0
+				} else {
+					startReturnIndex = startFoundIndex - flags.Padding
+				}
+
+				if endFoundIndex+flags.Padding > len(text)-1 {
+					endReturnIndex = len(text) - 1
+				} else {
+					endReturnIndex = endFoundIndex + flags.Padding
+				}
+
+				result += fmt.Sprintf("MATCH %s:\n%s\n\n", filename, text[startReturnIndex:endReturnIndex])
 			}
-
-			if endFoundIndex+flags.Padding > len(text)-1 {
-				endReturnIndex = len(text) - 1
-			} else {
-				endReturnIndex = endFoundIndex + flags.Padding
-			}
-
-			fmt.Println("MATCH " + filename + ": \n" + text[startReturnIndex:endReturnIndex] + "\n")
-
 		}
+	}
+
+	if flags.Invert {
+		result = text
 	}
 
 	return result, nil
