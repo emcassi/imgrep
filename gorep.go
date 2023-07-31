@@ -35,7 +35,15 @@ func main() {
 	defer client.Close()
 
 	for _, file := range files {
-		res, err := grepImage(client, flags, pattern, file)
+		text, err := extractText(client, file)
+		if err != nil {
+			fmt.Println(err)
+			continue
+		}
+
+		cleanData(&text, flags)
+
+		res, err := grepImage(text, flags, pattern, file)
 		if err != nil {
 			fmt.Printf("%s: %s\n", file, err)
 			continue
@@ -97,8 +105,7 @@ func collectArgs() (Flags, string, []string, []string, error) {
 	return flags, pattern, files, dirs, nil
 }
 
-func grepImage(client *gosseract.Client, flags Flags, pattern string, filename string) (string, error) {
-	var result string
+func extractText(client *gosseract.Client, filename string) (string, error) {
 	client.SetImage(filename)
 
 	text, err := client.Text()
@@ -106,7 +113,11 @@ func grepImage(client *gosseract.Client, flags Flags, pattern string, filename s
 		return "", errors.New("file: " + filename + " isn't a valid image file")
 	}
 
-	cleanData(&text, flags)
+	return text, nil
+}
+
+func grepImage(text string, flags Flags, pattern string, filename string) (string, error) {
+	var result string
 
 	rg, err := regexp.Compile(pattern)
 	if err != nil {
