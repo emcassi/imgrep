@@ -54,7 +54,7 @@ go run . -x error image2.png
 
 Contributions are welcome! If you want to contribute to imgrep, please follow these steps:
 
-- Read the [Contributing guidelines](CONTRIBUTING)
+- Read the [Contributing guidelines](CONTRIBUTING.md)
 - Fork the repository and create your branch from main.
 - Make sure your code follows the Go coding style.
 - Run tests to ensure your changes don't break existing functionality.
