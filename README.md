@@ -46,7 +46,7 @@ go run . [flags] pattern file.png [file2.png ...]
 Examples:
 
 ```bash
-go run . -ic -ip -p 10 hello world image1.png
+go run . -ic -ip -p 10 hello image1.png
 go run . -x error image2.png
 ```
 
