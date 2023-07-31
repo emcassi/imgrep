@@ -34,13 +34,15 @@ func main() {
 	client := gosseract.NewClient()
 	defer client.Close()
 
-	res, err := grepImage(client, flags, pattern, files[0])
-	if err != nil {
-		fmt.Println(err)
-		return
+	for _, file := range files {
+		res, err := grepImage(client, flags, pattern, file)
+		if err != nil {
+			fmt.Printf("%s: %s\n", file, err)
+			continue
+		}
+		fmt.Print(res)
 	}
 
-	fmt.Println(res)
 }
 
 func collectArgs() (Flags, string, []string, []string, error) {
@@ -148,7 +150,7 @@ func grepImage(client *gosseract.Client, flags Flags, pattern string, filename s
 	}
 
 	if flags.Invert {
-		result += text[lastMatch[1]:]
+		result = fmt.Sprintf("%s without (%s):\n%s%s\n\n", filename, pattern, result, text[lastMatch[1]:])
 	}
 
 	return result, nil
