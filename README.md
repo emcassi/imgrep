@@ -77,7 +77,7 @@ This project is licensed under the MIT License.
 
 ## Acknowledgements
 
-gosseract: A Go library for OCR.
+[gosseract](https://github.com/otiai10/gosseract): A Go library for OCR.
 
 ## Contact
 
