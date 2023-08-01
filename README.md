@@ -47,7 +47,8 @@ Examples:
 
 ```bash
 go run . -ic -ip -p 10 hello image1.png
-go run . -ic -p hello imgs/image1.png imgs/image2.png # supports input for multiple images
+go run . -ic hello imgs/image.png
+go run . -ic hello image1.png image2.png # supports input for multiple images
 go run . -p 50 '(?i)john' image1.png # supports go style regex statements
 go run . -x error image2.png
 ```
