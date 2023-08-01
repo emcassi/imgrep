@@ -57,6 +57,7 @@ go run . -x error image2.png
 - [x] Be able to grep a single image
 - [x] Be able to grep multiple images
 - [ ] Be able to pass directories of images
+- [x] Add concurrency support
 - [ ] Further Testing
 - [ ] Add documentation
 
