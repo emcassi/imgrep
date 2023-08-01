@@ -20,7 +20,7 @@ To use imgrep, you need to have Go installed on your system.
 ```bash
 git clone https://github.com/emcassi/imgrep.git
 cd imgrep
-go build
+go build -o imgrep
 ```
 
 ## Usage
@@ -28,7 +28,7 @@ go build
 To search for a pattern in an image, use the following command:
 
 ```bash
-go run . [flags] pattern file.png [file2.png ...]
+./imgrep [flags] pattern file.png [file2.png ...]
 ```
 
 ### Flags
@@ -46,11 +46,11 @@ go run . [flags] pattern file.png [file2.png ...]
 Examples:
 
 ```bash
-go run . -ic -ip -p 10 hello image1.png
-go run . -ic hello imgs/image.png # image in a subfolder
-go run . -ic hello image1.png image2.png # input for multiple images
-go run . -p 50 '(?i)john' image1.png # supports go style regex statements
-go run . -x error image2.png # invert - exclude the pattern in the results
+./imgrep -ic -ip -p 10 hello image1.png
+./imgrep -ic hello imgs/image.png # image in a subfolder
+./imgrep -ic hello image1.png image2.png # input for multiple images
+./imgrep -p 50 '(?i)john' image1.png # supports go style regex statements
+./imgrep -x error image2.png # invert - exclude the pattern in the results
 ```
 
 ## Roadmap
