@@ -33,7 +33,7 @@ func TestCleanData(t *testing.T) {
 	}
 }
 
-func TestGrepImage(t *testing.T) {
+func TestGrep(t *testing.T) {
 
 	// Test a regular match
 	text := "his name is john. he loves his job and his family."
@@ -46,7 +46,7 @@ func TestGrepImage(t *testing.T) {
 		"his",
 	}
 
-	result, err := grepImage(text, flags, pattern, filename)
+	result, err := grep(text, flags, pattern, filename)
 	if err != nil {
 		t.Errorf("Error occurred: %v", err)
 	}
@@ -62,7 +62,7 @@ func TestGrepImage(t *testing.T) {
 	expected = []string{
 		"This is a .",
 	}
-	result, err = grepImage(text, flags, pattern, filename)
+	result, err = grep(text, flags, pattern, filename)
 	if err != nil {
 		t.Errorf("Error occurred: %v", err)
 	}
@@ -79,7 +79,7 @@ func TestGrepImage(t *testing.T) {
 		" is a test. Padd",
 		"dding test",
 	}
-	result, err = grepImage(text, flags, pattern, filename)
+	result, err = grep(text, flags, pattern, filename)
 	if err != nil {
 		t.Errorf("Error occurred: %v", err)
 	}
@@ -92,7 +92,7 @@ func TestGrepImage(t *testing.T) {
 	flags = Flags{}
 	pattern = "notfound"
 	filename = "test.png"
-	_, err = grepImage(text, flags, pattern, filename)
+	_, err = grep(text, flags, pattern, filename)
 	if err == nil {
 		t.Errorf("Expected error for no matches, but got none.")
 	}

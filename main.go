@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/otiai10/gosseract/v2"
 )
@@ -17,6 +18,11 @@ type Flags struct {
 	IgnorePunctuation bool // Ignore punctuation when matching.
 	Invert            bool // Invert match (display lines that do not match).
 	Padding           int  // Padding (chars) for displaying matched text.
+}
+
+type FileResult struct {
+	Filename string
+	Result []string
 }
 
 func main() {
@@ -33,31 +39,32 @@ func main() {
 		return
 	}
 
-	// Initialize the OCR client.
-	client := gosseract.NewClient()
-	defer client.Close()
+	
+
+	var wg sync.WaitGroup
+	results := make(map[string][]string)
+
+	resultChan := make(chan FileResult)
 
 	// Process each file and perform text extraction and pattern matching.
 	for _, file := range files {
-		// Extract text from the image file.
-		text, err := extractText(client, file)
-		if err != nil {
-			fmt.Println(err)
-			continue
-		}
+		wg.Add(1)
+		go grepImage(flags, file, pattern, resultChan, &wg)
+	}
 
-		// Pre-process text based on flags.
-		cleanData(&text, flags)
+	go func() {
+		wg.Wait()
+		close(resultChan)
+	}()
 
-		// Perform pattern matching on the text.
-		res, err := grepImage(text, flags, pattern, file)
-		if err != nil {
-			fmt.Printf("%s: %s\n", file, err)
-			continue
-		}
+	for result := range resultChan {
+		results[result.Filename] = result.Result
+	}
 
+	for filename, res := range results {
+		fmt.Printf("MATCHES IN FILE: %s\n", filename)
 		for _, r := range res {
-			fmt.Println(r)
+			fmt.Println("MATCH: ", r)
 		}
 	}
 }
@@ -119,6 +126,35 @@ func collectArgs() (Flags, string, []string, []string, error) {
 	return flags, pattern, files, dirs, nil
 }
 
+func grepImage(flags Flags, file, pattern string, resultChan chan<- FileResult, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	// Initialize the OCR client.
+	client := gosseract.NewClient()
+	defer client.Close()
+
+	// Extract text from the image file.
+	text, err := extractText(client, file)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	// Pre-process text based on flags.
+	cleanData(&text, flags)
+
+	// Perform pattern matching on the text.
+	res, err := grep(text, flags, pattern, file)
+	if err != nil {
+		fmt.Printf("%s: %s\n", file, err)
+		return 
+	}
+
+	resultChan <- FileResult{
+		Filename: file,
+		Result: res,
+	}
+}
 // extractText extracts text from an image file using OCR.
 func extractText(client *gosseract.Client, filename string) (string, error) {
 	client.SetImage(filename)
@@ -131,8 +167,8 @@ func extractText(client *gosseract.Client, filename string) (string, error) {
 	return text, nil
 }
 
-// grepImage performs pattern matching on the given text based on the provided flags.
-func grepImage(text string, flags Flags, pattern string, filename string) ([]string, error) {
+// grep performs pattern matching on the given text based on the provided flags.
+func grep(text string, flags Flags, pattern string, filename string) ([]string, error) {
 	result := []string{}
 
 	rg, err := regexp.Compile(pattern)
