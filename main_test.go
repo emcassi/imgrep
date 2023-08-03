@@ -6,29 +6,33 @@ import (
 
 func TestCleanData(t *testing.T) {
 	// Test with IgnoreCase set to true
+	pattern := "hello"
 	text := "Hello World"
-	expected := "hello world"
+	expected := "(?i)hello"
 	flags := Flags{IgnoreCase: true}
-	cleanData(&text, flags)
-	if text != expected {
+	cleanData(&text, &pattern, flags)
+	if pattern != expected {
 		t.Errorf("Expected %q, but got %q", expected, text)
 	}
 
 	// Test with IgnorePunctuation set to true
+	pattern = "hello"
 	text = "Hello! How are you?"
 	expected = "Hello How are you"
 	flags = Flags{IgnorePunctuation: true}
-	cleanData(&text, flags)
+	cleanData(&text, &pattern, flags)
 	if text != expected {
 		t.Errorf("Expected %q, but got %q", expected, text)
 	}
 
 	// Test with both IgnoreCase and IgnorePunctuation set to true
+	pattern = "hello"
 	text = "Hello, World!"
-	expected = "hello world"
+	expectedText := "Hello World"
+	expectedPattern := "(?i)hello"
 	flags = Flags{IgnoreCase: true, IgnorePunctuation: true}
-	cleanData(&text, flags)
-	if text != expected {
+	cleanData(&text, &pattern, flags)
+	if pattern != expectedPattern && text == expectedText {
 		t.Errorf("Expected %q, but got %q", expected, text)
 	}
 }

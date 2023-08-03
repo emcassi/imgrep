@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"path/filepath"
 	"regexp"
-	"strings"
 	"sync"
 
 	"github.com/otiai10/gosseract/v2"
@@ -141,7 +140,7 @@ func grepImage(flags Flags, file, pattern string, resultChan chan<- FileResult, 
 	}
 
 	// Pre-process text based on flags.
-	cleanData(&text, flags)
+	cleanData(&text, &pattern, flags)
 
 	// Perform pattern matching on the text.
 	res, err := grep(text, flags, pattern, file)
@@ -226,14 +225,14 @@ func grep(text string, flags Flags, pattern string, filename string) ([]string, 
 }
 
 // cleanData pre-processes the text based on the provided flags.
-func cleanData(text *string, flags Flags) {
+func cleanData(text, pattern *string, flags Flags) {
 	var altered []rune
 	var addChar bool
 
 	punct := ",.!?:;'=[](){}\\|/~“”’`"
 
 	if flags.IgnoreCase {
-		*text = strings.ToLower(*text)
+		*pattern = "(?i)" + *pattern
 	}
 
 	for _, c := range *text {
