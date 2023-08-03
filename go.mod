@@ -1,4 +1,4 @@
-module github.com/emcassi/gorep
+module github.com/emcassi/imgrep
 
 go 1.20
 
