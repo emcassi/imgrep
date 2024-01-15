@@ -13,6 +13,10 @@ The tool is designed to be flexible and configurable, supporting various options
 - Invert match to display lines that do not match the pattern.
 - Display context around the matched text with padding.
 
+## Dependencies
+
+- [Tesseract](https://github.com/tesseract-ocr/tesseract)
+
 ## Installation
 
 To use imgrep, you need to have Go installed on your system.
@@ -55,7 +59,7 @@ Examples:
 
 ## Roadmap
 
-- [x] Add ocr functionality 
+- [x] Add ocr functionality
 - [x] Add argument parsing
 - [x] Be able to grep a single image
 - [x] Be able to grep multiple images
